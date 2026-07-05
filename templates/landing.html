@@ -100,4 +100,62 @@
     </div>
 </section>
 
+<!-- Video modal -->
+<div class="modal-overlay" id="videoModal" aria-hidden="true">
+    <div class="modal-box" role="dialog" aria-modal="true">
+        <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+        <div class="modal-video">
+            <iframe
+                id="videoFrame"
+                src=""
+                data-src="https://www.youtube.com/embed/dQw4w9WgXcQ?rel=0"
+                title="See how Spendly works"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var modal    = document.getElementById('videoModal');
+    var frame    = document.getElementById('videoFrame');
+    var closeBtn = document.getElementById('modalClose');
+    var trigger  = document.querySelector('.hero-btn-alt');
+
+    function openModal() {
+        frame.src = frame.dataset.src;
+        modal.setAttribute('aria-hidden', 'false');
+        modal.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        frame.src = '';
+        modal.setAttribute('aria-hidden', 'true');
+        modal.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        openModal();
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+    });
+}());
+</script>
 {% endblock %}
