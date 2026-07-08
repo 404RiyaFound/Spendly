@@ -4,6 +4,12 @@ from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
+from database.queries import (
+    get_category_breakdown,
+    get_recent_transactions,
+    get_summary_stats,
+    get_user_by_id,
+)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key")
@@ -122,31 +128,16 @@ def profile():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
+    user = get_user_by_id(session["user_id"])
     profile_user = {
-        "name": session.get("user_name", "Demo User"),
-        "email": "demo@spendly.com",
-        "initials": "".join(part[0] for part in session.get("user_name", "Demo User").split()[:2]).upper(),
-        "member_since": "March 2025",
+        "name": user["name"],
+        "email": user["email"],
+        "initials": "".join(part[0] for part in user["name"].split()[:2]).upper(),
+        "member_since": user["member_since"],
     }
-    profile_stats = {
-        "total_spent": 5345.00,
-        "transaction_count": 8,
-        "top_category": "Food",
-    }
-    profile_transactions = [
-        {"date": "22 Jun 2026", "description": "Lunch with friends", "category": "Food", "amount": 275.00},
-        {"date": "18 Jun 2026", "description": "Miscellaneous", "category": "Other", "amount": 90.00},
-        {"date": "15 Jun 2026", "description": "New shoes", "category": "Shopping", "amount": 2200.00},
-        {"date": "12 Jun 2026", "description": "Movie tickets", "category": "Entertainment", "amount": 600.00},
-        {"date": "09 Jun 2026", "description": "Pharmacy purchase", "category": "Health", "amount": 350.00},
-        {"date": "06 Jun 2026", "description": "Electricity bill", "category": "Bills", "amount": 1200.00},
-    ]
-    profile_categories = [
-        {"name": "Shopping", "total": 2200.00, "percent": 40},
-        {"name": "Bills", "total": 1200.00, "percent": 20},
-        {"name": "Entertainment", "total": 600.00, "percent": 15},
-        {"name": "Food", "total": 725.00, "percent": 10},
-    ]
+    profile_stats = get_summary_stats(session["user_id"])
+    profile_transactions = get_recent_transactions(session["user_id"])
+    profile_categories = get_category_breakdown(session["user_id"])
 
     return render_template(
         "profile.html",
