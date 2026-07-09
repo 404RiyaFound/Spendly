@@ -19,6 +19,19 @@
         </div>
     </div>
 
+    <form class="profile-filter" method="get" action="{{ url_for('profile') }}">
+        <label class="profile-filter-field">
+            <span>From</span>
+            <input type="date" name="start" value="{{ filter_start }}">
+        </label>
+        <label class="profile-filter-field">
+            <span>To</span>
+            <input type="date" name="end" value="{{ filter_end }}">
+        </label>
+        <button type="submit" class="profile-filter-submit">Filter</button>
+        <a href="{{ url_for('profile') }}" class="profile-filter-clear">Clear</a>
+    </form>
+
     <div class="profile-stats">
         <div class="profile-stat">
             <div class="profile-stat-label">Total spent</div>
@@ -47,6 +60,11 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {% if not profile_transactions and (filter_start or filter_end) %}
+                    <tr>
+                        <td colspan="4" class="profile-table-empty">No transactions in this range.</td>
+                    </tr>
+                    {% else %}
                     {% for tx in profile_transactions %}
                     <tr>
                         <td>{{ tx.date }}</td>
@@ -55,6 +73,7 @@
                         <td class="col-amount">₹{{ "%.2f"|format(tx.amount) }}</td>
                     </tr>
                     {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>
