@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 from flask import Flask, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -119,6 +120,16 @@ def logout():
     return redirect(url_for("landing"))
 
 
+def _parse_filter_date(value):
+    if not value:
+        return None
+    try:
+        datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return None
+    return value
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
@@ -128,6 +139,13 @@ def profile():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
+    start = _parse_filter_date(request.args.get("start", ""))
+    end = _parse_filter_date(request.args.get("end", ""))
+    if start and end and start > end:
+        start, end = end, start
+    filter_start = start or ""
+    filter_end = end or ""
+
     user = get_user_by_id(session["user_id"])
     profile_user = {
         "name": user["name"],
@@ -135,9 +153,9 @@ def profile():
         "initials": "".join(part[0] for part in user["name"].split()[:2]).upper(),
         "member_since": user["member_since"],
     }
-    profile_stats = get_summary_stats(session["user_id"])
-    profile_transactions = get_recent_transactions(session["user_id"])
-    profile_categories = get_category_breakdown(session["user_id"])
+    profile_stats = get_summary_stats(session["user_id"], start=start, end=end)
+    profile_transactions = get_recent_transactions(session["user_id"], start=start, end=end)
+    profile_categories = get_category_breakdown(session["user_id"], start=start, end=end)
 
     return render_template(
         "profile.html",
@@ -145,6 +163,8 @@ def profile():
         profile_stats=profile_stats,
         profile_transactions=profile_transactions,
         profile_categories=profile_categories,
+        filter_start=filter_start,
+        filter_end=filter_end,
     )
 
 
